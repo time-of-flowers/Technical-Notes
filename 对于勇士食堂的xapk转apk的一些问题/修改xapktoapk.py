@@ -1,3 +1,6 @@
+#注意！这依然不是一个可用的版本，脚本在对于xml的处理中会遗漏dist：fusing模块的处理，以至于形成的xml中没有具备fused属性的融合模块
+#这导致被分割出去的模块如果依赖于meta-data调用将无法被检测到。需要对xml进行修改
+
 #这是对https://github.com/LuigiVampa92/xapk-to-apk在window平台做出的一点修改
 #使用os.sep处理跨平台路径问题
 #针对合并xml文件的修改字典添加了多样性（虽然只有一条）
