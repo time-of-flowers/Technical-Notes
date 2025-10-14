@@ -3,26 +3,23 @@
 // @namespace    HVIVAS
 // @description  Hentaiverse Integrated Visual Augmentation System
 // @author       time_of_flower
-// @version      v0.70
-// @icon         data:image/png;base64,UklGRjACAABXRUJQVlA4TCQCAAAvG8AGEL/jJLZtUVlyyyu//PL3T0AEJBGQyKuZF4JpJElCWo5EvkQSCvlHgUSuZCFJkqDEwsXFe949f7Fx/tWmbcCM6bkDUJBARGDEglkYoRCCECOQIBYMI4IQQQnb8x84URCLiY1BKIqiEIcvEUzxwQvvcwiyZhtn5v+EYChCJAbDVMhxvJIIkucbt4MYc9AhRoRv5rnESBI2fj82lutKd573dxuDRMm2Tbu6K3au7z3Z+5zYtm3btpPn9//HnzBnRP8ZuG3bSOre7d0rItOzoUVkqlTACtAtPAoATs2ot28BVv3F1vevr8/4zGTtx+PNn9+r835SDs6wt1U9OWEdPr+vkvP/AS+U463Mop4YjxYIVufhC0A5v9rT42OVf388edoE8CleQ4+NKjl5WZ2bd1Ih510nsFneV6MjSgBvQvokS3lqZNgUwHNMofvgDj8RHR6qEyBU5fVEDw1aLgJ02H+oHhzQ2ZAc3euBfjN7BFllMBunur8PAhRLCE5PVF+P3twuzFsSj3P/QNBZiGZPp15YKlz10RVdbw7d2W7epmX1n8tV+hwAaer2VrV/cRcOQ7c2RfOlyANJH4xktKlR3V8ehWIlGW2sr1neOpVVBpRcQ6rraebmsEBCkKaubzDXWVLOoJ+YWEsbqqnBKmPKIAMCjF0mVXO9lTaqjJWE+LuzAiSjLU1WgDoGzwFUtD3S0dbegbbWZrQ0odktW9nR3dUbAQ==
+// @version      alpha0.95
+// @icon         https://youke1.picui.cn/s1/2025/10/11/68ea24f68bb40.png
 // @match        *://*.hentaiverse.org/*
 // @match        *://*.hentaiverse.org/isekai/*
 // @exclude      *hentaiverse.org/equip/*
 // @exclude      *hentaiverse.org/isekai/equip/*
-// @grant        GM_getResourceURL
 // @grant        GM_addStyle
-// @resource     AvatarImg https://static.wikia.nocookie.net/destiny-child-for-kakao/images/0/02/Spa_Shining_Mars%E2%99%A5.png
-// @resource     SpiritBurnBG https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/imgResource/pixelFlameBorder.gif
-// @resource     VoidDamageBG https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/imgResource/starfield.png
-// @resource     GothicFlames https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/Gothic%20Flames.woff2
-// @resource     imgTwilightSparkle https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/imgResource/Twilight%20Sparkle.png
-// @resource     imgRarity https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/imgResource/Rarity.png
-// @resource     imgFluttershy https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/imgResource/Fluttershy.png
-// @resource     imgRainbowDash https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/imgResource/Rainbow%20Dash.png
-// @resource     imgPinkiePie https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/imgResource/Pinkie%20Pie.png
-// @resource     imgApplejack https://cdn.jsdelivr.net/gh/time-of-flowers/Technical-Notes@main/HV%E8%84%9A%E6%9C%AC/imgResource/Applejack.png
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
+// @connect      api.github.com
+// @connect      raw.githubusercontent.com
 // @run-at document-end
 // ==/UserScript==
+
+// 在存储中手动设置resetBasicArtResDB来重新加载基础美术资源
 
 (function() {
     'use strict';
@@ -33,30 +30,23 @@
         EnableHitAnima :true,
         EnableAjaxRound : (JSON.parse(localStorage.getItem("HVmbcfg") || "{}").ajaxRound) || false,
         EnableAvatar : true,
+        EnableBackgroundImg : true,
     }
-    function avatarLoader(){
-        const AvatarUrl = GM_getResourceURL("AvatarImg")
-        const styleEl = document.createElement("style");
-        styleEl.id = "avatar-style";
-        styleEl.textContent=`#battle_left::before {
-            content: "";display: block;position: absolute;
-            left: 0;top: -2px;width: 100px;height: 100px;
-            background: url("${AvatarUrl}") no-repeat;background-size: contain;}`;
-        document.head.appendChild(styleEl);
-    };
     function cfgLoader(){
-        const avatarUrl = GM_getResourceURL("avatar");
-        const SpiritBurnBGUrl = GM_getResourceURL("SpiritBurnBG");
-        const VoidDamageBGUrl = GM_getResourceURL("VoidDamageBG");
-        const fontUrl = GM_getResourceURL("GothicFlames");
         const Config = {
             Shake_Time : 250,
             Damage_Lifetime : 1000,
             DAMAGE_PARAMS : { offsetY: 35, offsetX: 80, floatHeight: 10 },
             RETRY_ATTEMPTS : 5,
             RETRY_DELAY : 500,
+            MIN_INTERVAL : 255,
+            LowHealthAvatarUrl : resourcesUrl.SpaSwimsuitDavi,
+            SpiritOnAvatarUrl : resourcesUrl.SpaLoveHateDavi,
+            NormalAvatarUrl : resourcesUrl.SpaAlteredDavi,
+            VictoryAudioUrl : resourcesUrl.VictoryAudio,
+            FailedAudioUrl : resourcesUrl.FailedAudio,
         };
-        Config.SVG_MAP = {
+        Config.SVGTexture = {
             spirit_on: 'data:image/svg+xml;utf8,' + encodeURIComponent(`
             <svg width="414" height="8" xmlns="http://www.w3.org/2000/svg">
             <rect width="100%" height="8" fill="#DF7B30">
@@ -146,7 +136,7 @@
             };
         Config.cssStyleText = `
             @font-face {
-                font-family: "myFont"; src: url("${fontUrl}") format("woff2");
+                font-family: "myFont"; src: url("${resourcesUrl.GothicFlames}") format("woff2");
             }
             .hv-damage-base {
                 position: absolute; pointer-events: none; z-index: 999;
@@ -186,7 +176,7 @@
                 -webkit-background-clip: text;-webkit-text-fill-color: transparent;
                 filter: drop-shadow(0 0 8px rgba(255,0,255,0.8));}
             .hv-damage-void {
-                background-image: url("${VoidDamageBGUrl}");
+                background-image: url("${resourcesUrl.VoidDamageBG}");
                 background-size: cover;
                 background-position: center;
                 background-repeat: no-repeat;
@@ -239,21 +229,37 @@
             #pane_vitals.spiritOn #vcp::before {
                 content: ""; pointer-events: none;
                 position: absolute; top: -27px; left: -33px; width: 466px; height: 44px;
-                background: url("${SpiritBurnBGUrl}"); z-index: -1;
+                background: url("${resourcesUrl.SpiritBurnBG}"); z-index: -1;
             }
         `;
+        return Config
+    }
+    function mapRuleLoader(){
+        const AtoB = {};
+        AtoB.barToSVG = {
+            "bar_red.png": () => SpiritOn ? cfg.SVGTexture.spirit_on : cfg.SVGTexture.spirit_off,
+            "bar_green.png": () => cfg.SVGTexture.health_none,
+            "bar_bgreen.png": () => cfg.SVGTexture.health_none,
+            "bar_dgreen.png": () => cfg.SVGTexture.health_sparkoflife,
+            "bar_blue.png": () => cfg.SVGTexture.magic
+        };
+        AtoB.damageTypeToClass = {
+            physical: "hv-damage-physical", void: "hv-damage-void",
+            fire: "hv-damage-fire", cold: "hv-damage-cold", wind: "hv-damage-wind",
+            elec: "hv-damage-elec", holy: "hv-damage-holy", dark: "hv-damage-dark"
+        };
         RegexPatterns = {
             bar : /^\/(isekai\/)?y\/bar_(red|green|bgreen|dgreen|blue)\.png$/,
-            spikeShield : /Your\s+spike\s+shield\s+hits\s+(.+?)\s+for\s+(\d+)\s+points\s+of\s+(\w+)\s+damage/i,
-            bleedingWound : /Bleeding\s+Wound\s+hits\s+(.+?)\s+for\s+(\d+)\s+damage/i,
+            counterAttack_and_spikeShield : /(?:Your\s+spike\s+shield\s+hits|You\s+counter)\s+(.+?)\s+for\s+(\d+)\s+points\s+of\s+(\w+)\s+damage/i,
+            damageOverTime : /(?:Bleeding\s+Wound|Spreading\s+Poison|Vital\s+Theft|Ripened\s+Soul|Burning\s+Soul)\s+hits\s+(.+?)\s+for\s+(\d+)\s+damage/i,
             activeAttack : /\b(?:hit|hits|crit|crits|blasts)\s+(.+?)\s+for\s+(\d+)\s+(\w+)\s+damage/i,
         };
         damagePatterns = [
-            { regex: RegexPatterns.spikeShield,
+            { regex: RegexPatterns.counterAttack_and_spikeShield,
              getType: match => match[3].toLowerCase(),
              isCrit: false,
              onlyPassive: true },
-            { regex: RegexPatterns.bleedingWound,
+            { regex: RegexPatterns.damageOverTime,
              getType: () => "physical",
              isCrit: false,
              onlyPassive: true },
@@ -262,50 +268,67 @@
              isCrit: text => /(crit|blasts)/i.test(text),
              onlyPassive: false }
         ];
-        return Config
-    }
-    function mapLoader(){
-        const AtoB = {};
-        AtoB.damageTypeToClass = {
-            physical: "hv-damage-physical", void: "hv-damage-void",
-            fire: "hv-damage-fire", cold: "hv-damage-cold", wind: "hv-damage-wind",
-            elec: "hv-damage-elec", holy: "hv-damage-holy", dark: "hv-damage-dark"
-        };
-        AtoB.barToSVG = {
-            "bar_red.png": () => SpiritOn ? cfg.SVG_MAP.spirit_on : cfg.SVG_MAP.spirit_off,
-            "bar_green.png": () => cfg.SVG_MAP.health_none,
-            "bar_bgreen.png": () => cfg.SVG_MAP.health_none,
-            "bar_dgreen.png": () => cfg.SVG_MAP.health_sparkoflife,
-            "bar_blue.png": () => cfg.SVG_MAP.magic
-        };
         return AtoB
     }
+    function backgroudimgLoader(){
+        let cache = GM_getValue('wallpaper_cache', null),
+            queue = GM_getValue('used_wallpapers', []);
+        //let cache = { ...rawCache, images: rawCache.images.filter(img => !img.startsWith('NIKKE')) };
+        if (!Array.isArray(queue)) queue = [];
+        const now = Date.now(),needRefresh = !cache || !Array.isArray(cache.images) || now - cache.fetchedAt > 15 * 24 * 3600000 || cache.manualRefresh;
+        function applyWallpaper(images, queue) {
+            const used = new Set(queue);
+            const avail = images.filter(n => !used.has(n));
+            if (!avail.length) return;
+            const chosen = avail[Math.floor(Math.random() * avail.length)];
+            queue.push(chosen);
+            while (queue.length > cache.queue_threshold) { queue.shift(); }
+            GM_setValue('used_wallpapers', queue);
+            GM_addStyle(`body { background-image: url("https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/bg/${chosen}");
+                         background-size: cover; background-position-y: ` + (chosen.includes("aos") ? "30%" : "center") + `; background-repeat: no-repeat; }
+                         #csp { margin: 0 auto; background-color: rgba(237,235,223,0.5);}`);
+        }
+        if (needRefresh) {
+            console.log("[HVIVAS] BGDB Needs update");
+            GM_xmlhttpRequest({ method: 'GET', url: 'https://raw.githubusercontent.com/time-of-flowers/Assets-for-HVIVAS/main/bg/bg_index.json',
+                onload: r => {
+                    try {
+                        const data = JSON.parse(r.responseText); const imgs = data.images;
+                        if (!imgs.length) return;
+                        cache = { images: imgs, fetchedAt: now, manualRefresh: false , queue_threshold : Math.floor(imgs.length * 0.6)};
+                        GM_setValue('wallpaper_cache', cache);
+                        console.log("[HVIVAS] BGDB Update completed");
+                        applyWallpaper(cache.images, queue);
+                    } catch { return; }
+                }
+            });
+            return;
+        }
+        applyWallpaper(cache.images, queue);
+    };
     async function riddleMasterLoader(){
         if(!EnableSwitch.EnableVerificationCodeAssistant) return;
         const img = document.getElementById("riddleimage").querySelector("img");
         if (img) {
-            const style = document.createElement("style");
-            style.textContent = `
-            * { user-select: none;}
-            html { overflow: auto; scrollbar-color: #5C0D11 transparent; scrollbar-width: thin !important }
-            #csp, #mainpane { height: 800px;}
-            #riddleimage { position: relative; z-index: 0;}
-            #riddlemid { position: relative; z-index: 100;}
-            #riddler1 label { height: initial; white-space: nowrap;}
-            #mlp_pane { z-index: 200; position: fixed; top: 20px; right: 10px; padding: 10px; width: 200px;
-            background: #dcd3b7; border: 2px solid #5C0D11; border-radius: 5px; cursor: move; }
-            #mlp_box { width: 200px; cursor: default;}`;
-            document.head.appendChild(style);
-
+            if(!document.getElementById('riddleMasterCSS')){
+                const riddleMasterStyle = document.createElement('style');
+                riddleMasterStyle.type = 'text/css'; riddleMasterStyle.id = 'riddleMasterCSS';
+                riddleMasterStyle.textContent = `* { user-select: none;} html { overflow: auto; scrollbar-color: #5C0D11 transparent; scrollbar-width: thin !important }
+                    #csp, #mainpane { height: 800px;}
+                    #riddleimage { position: relative; z-index: 0;} #riddlemid { position: relative; z-index: 100;} #riddler1 label { height: initial; white-space: nowrap;}
+                    #mlp_pane { z-index: 200; position: fixed; top: 20px; right: 10px; padding: 10px; width: 200px; background: #dcd3b7; border: 2px solid #5C0D11; border-radius: 5px; cursor: move; }
+                    #mlp_box { width: 200px; cursor: default;}`;
+                document.head.appendChild(riddleMasterStyle);
+            }
             const editor = await PhotoEditor.create(img);
             createManagePanel(editor);
             const PonyImages = {
-                "Twilight Sparkle":GM_getResourceURL("imgTwilightSparkle"),
-                "Rarity":GM_getResourceURL("imgRarity"),
-                "Fluttershy":GM_getResourceURL("imgFluttershy"),
-                "Rainbow Dash":GM_getResourceURL("imgRainbowDash"),
-                "Pinkie Pie":GM_getResourceURL("imgPinkiePie"),
-                "Applejack":GM_getResourceURL("imgApplejack"),
+                "Twilight Sparkle":resourcesUrl.imgTwilightSparkle,
+                "Rarity":resourcesUrl.imgRarity,
+                "Fluttershy":resourcesUrl.imgFluttershy,
+                "Rainbow Dash":resourcesUrl.imgRainbowDash,
+                "Pinkie Pie":resourcesUrl.imgPinkiePie,
+                "Applejack":resourcesUrl.imgApplejack,
             };
 
             const labels = document.getElementById("riddler1").querySelectorAll("label");
@@ -396,22 +419,156 @@
             this.img.style.transform = `rotate(${this.data.rotate}deg) scale(${this.data.scale})`;
         }
     }
+    class AudioPlayer {
+        constructor() { this.audio = new Audio(); this.audio.preload = 'auto'; }
+        play(url, volume = 1, restart = true) {
+            if (restart || this.audio.src !== url) {
+                this.audio.src = url; this.audio.currentTime = 0;
+            }
+            this.audio.volume = volume;
+            this.audio.play();
+        }
+        pause() { this.audio.pause();}
+        isPlaying() { return !this.audio.paused && !this.audio.ended;}
+    }
+    class ResourceManager {
+        constructor() {
+            this.dbName = 'HVIVASResourceDB';
+            this.storeName = 'resources';
+            this.db = null;
+            this.resources = [
+                { name: 'SpaSwimsuitDavi', url: 'https://static.wikia.nocookie.net/destiny-child-for-kakao/images/0/0b/Spa_Swimsuit_Davi.png' },
+                { name: 'SpaAlteredDavi', url: 'https://static.wikia.nocookie.net/destiny-child-for-kakao/images/6/66/Spa_Altered_Davi.png' },
+                { name: 'SpaLoveHateDavi', url: 'https://static.wikia.nocookie.net/destiny-child-for-kakao/images/0/0f/Spa_LoveHateDavi.png' },
+                { name: 'SpiritBurnBG', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/sprite/pixelFlameBorder.gif' },
+                { name: 'VoidDamageBG', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/sprite/starfield.png' },
+                { name: 'GothicFlames', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/font/Gothic%20Flames%20simplify.woff2' },
+                { name: 'VictoryAudio', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/sound/victory.wav' },
+                { name: 'FailedAudio', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/sound/failed.wav' },
+                { name: 'imgTwilightSparkle', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/imgPony/Twilight%20Sparkle.png' },
+                { name: 'imgRarity', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/imgPony/Rarity.png' },
+                { name: 'imgFluttershy', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/imgPony/Fluttershy.png' },
+                { name: 'imgRainbowDash', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/imgPony/Rainbow%20Dash.png' },
+                { name: 'imgPinkiePie', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/imgPony/Pinkie%20Pie.png' },
+                { name: 'imgApplejack', url: 'https://cdn.jsdelivr.net/gh/time-of-flowers/Assets-for-HVIVAS@main/imgPony/Applejack.png' }
+            ];
+        }
+        async init() {
+            const shouldReset = GM_getValue('resetBasicArtResDB', true);
+            if (shouldReset) {
+                console.log('resetBasicArtResDB switch is ON, deleting database...');
+                await this.#resetDB();
+                GM_setValue('resetBasicArtResDB', false);
+            }
+            this.db = await this.#openDB();
+            for (const item of this.resources) {
+                const exists = await this.#getRaw(item.name);
+                if (!exists) {
+                    console.log(`Resource ${item.name} does not exist, start downloading...`);
+                    const res = await fetch(item.url);
+                    if (!res.ok) throw new Error(`Download failed: ${item.url}`);
+                    const buf = await res.arrayBuffer();
+                    await this.#put(item.name, buf);
+                    console.log(`Resource ${item.name} has been downloaded and cached successfully`);
+                } else {
+                    console.log(`Resource ${item.name} is cached`);
+                }
+            }
+        }
+        async get(name) {
+            const record = await this.#getRaw(name);
+            if (!record) {
+                const item = this.resources.find(r => r.name === name);
+                if (!item) throw new Error(`Resource ${name} does not exist`);
+                console.warn(`Resource ${name} is missing from cache, temporarily downloading...`);
+                const res = await fetch(item.url);
+                const buf = await res.arrayBuffer();
+                await this.#put(name, buf);
+                return buf;
+            }
+            return record.data;
+        }
+        async #openDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(this.dbName, 1);
+                req.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(this.storeName)) {
+                        db.createObjectStore(this.storeName, { keyPath: 'name' });
+                    }
+                };
+                req.onsuccess = (e) => resolve(e.target.result);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+        async #put(name, data) {
+            return new Promise((resolve, reject) => {
+                const tx = this.db.transaction(this.storeName, 'readwrite');
+                tx.objectStore(this.storeName).put({ name, data });
+                tx.oncomplete = resolve;
+                tx.onerror = (e) => reject(e.target.error);
+            });
+        }
+        async #getRaw(name) {
+            return new Promise((resolve, reject) => {
+                const tx = this.db.transaction(this.storeName, 'readonly');
+                const req = tx.objectStore(this.storeName).get(name);
+                req.onsuccess = () => resolve(req.result || null);
+                req.onerror = (e) => reject(e.target.error);
+            });
+        }
+        async #resetDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.deleteDatabase(this.dbName);
+                req.onsuccess = () => {
+                    console.log('The database was successfully deleted');
+                    resolve();
+                };
+                req.onerror = (e) => {
+                    console.error('Failed to delete the database', e.target.error);
+                    reject(e.target.error);
+                };
+                req.onblocked = () => {
+                    console.warn('Deletion is blocked: Please close other pages using this database');
+                };
+            });
+        }
+    }
 
     /* ?barType: true Standard , false Utilitarian */
-    let cfg = {}, barType = true, lastSpiritOn = null, SpiritOn = false, map = {} ,
-        damageTextPool = null, RegexPatterns = {}, damagePatterns = [];
+    let cfg = {}, map = {} ,damageTextPool = null, barType = true,
+        currentAvatarKey = null, lastHealthFlash = null, healthFlash = false, lastSpiritOn = null, SpiritOn = false, lastRequestTime = 0,
+        RegexPatterns = {}, damagePatterns = [], worker = null ,WoWplayer, rsmanager, resourcesUrl = {} ;
 
     checkDom();
-
     function checkDom() {
+        if(EnableSwitch.EnableBackgroundImg){backgroudimgLoader()};
         const battleMain = document.getElementById('battle_main');
         if (battleMain) {
-            cfg = cfgLoader();
-            map = mapLoader();
-            if (document.getElementById('dvbc')) { barType = false;}
-            else { barType = true; }
-            init();
+            WoWplayer = new AudioPlayer();
+            if (document.getElementById('dvbc')) { barType = false;} else { barType = true; }
+            (async () => {
+                rsmanager = new ResourceManager();
+                await rsmanager.init();
+                console.log('资源检查完成');
+                for (const name of ['SpaSwimsuitDavi','SpaAlteredDavi','SpaLoveHateDavi',
+                                    'SpiritBurnBG','VoidDamageBG','GothicFlames','VictoryAudio','FailedAudio',
+                                    'imgTwilightSparkle','imgRarity','imgFluttershy','imgRainbowDash','imgPinkiePie','imgApplejack']) {
+                    resourcesUrl[name] = URL.createObjectURL(new Blob([await rsmanager.get(name)]));
+                }
+                cfg = cfgLoader(); map = mapRuleLoader(); init();
+            })();
+            const workerCode = `function preciseWait(ms){const end = performance.now() + ms;
+                const wait = (targetTime) => {
+                    const remaining = targetTime - performance.now();
+                    if (remaining <= 0) {postMessage('done');return;}
+                    setTimeout(() => wait(targetTime), remaining);
+                };wait(end);}
+                self.onmessage = function(e) {if (e.data && e.data.delay > 0) {preciseWait(e.data.delay);}};`;
+            worker = new Worker(URL.createObjectURL(new Blob([workerCode], { type: 'application/javascript' })));
+
             console.log('battleInit: Refresh');
+            hookXHR();
             if (EnableSwitch.EnableAjaxRound) {
                 document.addEventListener('DOMContentLoaded', function () {
                     if (document.getElementById('riddlemaster')){
@@ -423,30 +580,35 @@
                     } else { console.warn('What is this ?'); }
                 });
             }
-            if(EnableSwitch.EnableDamageNum && EnableSwitch.EnableHitAnima){
-                hookXHR();
-                console.log('BattleLog: Start Analysis');
-            }
         } else if (document.getElementById('riddlemaster')) {
-            riddleMasterLoader();
+            (async () => {
+                rsmanager = new ResourceManager();
+                await rsmanager.init();
+                console.log('资源检查完成');
+                for (const name of ['imgTwilightSparkle','imgRarity','imgFluttershy','imgRainbowDash','imgPinkiePie','imgApplejack']) {
+                    resourcesUrl[name] = URL.createObjectURL(new Blob([await rsmanager.get(name)]));
+                }
+                riddleMasterLoader();
+            })();
             console.log('riddlemaster: Refresh')
         } else {
             console.warn('What is this ? This is not a battle page. Element #pane_vitals or #riddlemaster not found');
         }
     }
     function init(){
-        lastSpiritOn = null;
+        lastSpiritOn = null;lastHealthFlash = null;
         const vitals = document.getElementById('pane_vitals');
-        const cssStyle = document.createElement('style');
-        cssStyle.id = "DamgeNumShakeAndSpiriteBurning";
-        cssStyle.textContent = cfg.cssStyleText;
-        document.head.appendChild(cssStyle);
-        if(EnableSwitch.EnableAvatar) avatarLoader();
+        if(!document.getElementById('mainCSS')){
+            const mainStyle = document.createElement('style');
+            mainStyle.type = 'text/css'; mainStyle.id = 'mainCSS'; mainStyle.textContent = cfg.cssStyleText;
+            document.head.appendChild(mainStyle);
+        }
         updateMonsterMap(cfg.RETRY_ATTEMPTS,cfg.RETRY_DELAY);
         damageTextPool = new TextPool(Object.keys(map.monsterNameToId).length,Object.keys(map.monsterNameToId).length * cfg.Damage_Lifetime / cfg.Shake_Time);
-        if (EnableSwitch.EnableCustomBar){spiritVisualEffect();}
+        if (EnableSwitch.EnableCustomBar) spiritVisualEffect();
+        if(EnableSwitch.EnableAvatar) updateAvatarStatus(true);
         var obs = new MutationObserver((mutationsList, observer)=>{
-            if(EnableSwitch.EnableCustomBar){spiritVisualEffect();}
+            if(EnableSwitch.EnableCustomBar) spiritVisualEffect();
         });
         obs.observe(vitals, { childList: true });
     }
@@ -479,9 +641,8 @@
         if (paneAction.querySelector('img[src$="spirit_a.png"]')) { SpiritOn = true; }
         else if (paneAction.querySelector('img[src$="spirit_s.png"], img[src$="spirit_n.png"]')) { SpiritOn = false; }
         if ((SpiritOn !== lastSpiritOn) && barType) {
-            if (SpiritOn) {paneVitals.classList.add('spiritOn');}
+            if (SpiritOn) {paneVitals.classList.add('spiritOn')}
             else {paneVitals.classList.remove('spiritOn');}
-            lastSpiritOn = SpiritOn;
         }
         Array.from(paneVitals.getElementsByTagName('img')).filter(img => RegexPatterns.bar.test(img.getAttribute('src'))).forEach(originalImg => {
             const src = originalImg.getAttribute('src');
@@ -501,27 +662,77 @@
             originalImg.style.display = 'none';
         });
     }
+    function updateAvatarStatus(isInit = false){
+        if(isInit){
+            healthFlash = unsafeWindow.do_healthflash;
+            if(!document.getElementById('AvatarCSS')){
+                const avatarStyle = document.createElement('style');
+                avatarStyle.type = 'text/css'; avatarStyle.id = 'AvatarCSS';
+                avatarStyle.textContent = `#battle_left::before { content: ""; display: block; position: absolute;
+                    left: 0; top: -12px; width: 100px; height: 100px;
+                    background: var(--avatar-url) no-repeat; background-size: contain;}`;
+                document.head.appendChild(avatarStyle);
+            }
+        }
+        const resourceKey = SpiritOn ? cfg.SpiritOnAvatarUrl : (healthFlash ? cfg.LowHealthAvatarUrl : cfg.NormalAvatarUrl);
+        if ((SpiritOn !== lastSpiritOn) || (lastHealthFlash !== healthFlash)){
+            if (resourceKey !== currentAvatarKey) {
+                document.documentElement.style.setProperty("--avatar-url",`url("${resourceKey}")`);
+                currentAvatarKey = resourceKey;
+            }
+        }
+    }
     function hookXHR() {
         const oldOpen = XMLHttpRequest.prototype.open;
         const oldSend = XMLHttpRequest.prototype.send;
         XMLHttpRequest.prototype.open = function(method, url) {
+            this._isPost = method === 'POST';
             this._targetURL = url;
             return oldOpen.apply(this, arguments);
         };
         XMLHttpRequest.prototype.send = function() {
-            this.addEventListener('load', function() {
-                try {
-                    const data = JSON.parse(this.responseText);
-                    if (data && data.textlog) {
-                        handleGameResponse(data);
+            if (this._isPost) {
+                if(EnableSwitch.EnableDamageNum || EnableSwitch.EnableHitAnima || EnableSwitch.EnableAvatar){
+                    this.addEventListener('load', function() {
+                        try {
+                            const data = JSON.parse(this.responseText);
+                            if (data && data.textlog){
+                                if(EnableSwitch.EnableAvatar){ healthFlash = data.healthflash; updateAvatarStatus(); };
+                                if(EnableSwitch.EnableDamageNum || EnableSwitch.EnableHitAnima){handleGameResponse(data.textlog);}
+                                lastSpiritOn = SpiritOn; lastHealthFlash = healthFlash;
+                            }
+                            if(data.pane_completion){
+                                parseBattleResult(data.pane_completion);
+                            }
+                        } catch (err) {console.error('Error :', err);}
+                    });
+                }
+                let delayNeeded = lastRequestTime + cfg.MIN_INTERVAL - performance.now();
+                if (delayNeeded > 0) {
+                    if (lastRequestTime > performance.now()) {
                     }
-                } catch (err) {}
-            });
+                    delayViaWorker(delayNeeded).then(() => {
+                        lastRequestTime = performance.now();
+                        oldSend.apply(this, arguments);
+                    });
+                    return;
+                }
+            }
+            lastRequestTime = performance.now();
             return oldSend.apply(this, arguments);
         };
     }
-    function handleGameResponse(data) {
-        const damageMap = parsePlayerDamage(data.textlog);
+    function delayViaWorker(ms) {
+        return new Promise((resolve,reject) => {
+            const timeout = setTimeout(() => {
+                reject(new Error('Time Out [4s]: delayViaWorker failed. Please check Auxiliary thread logic'));
+            }, ms + 1000);
+            worker.onmessage = (e) => {if(e.data==='done') resolve();};
+            worker.postMessage({ delay: ms });
+        });
+    }
+    function handleGameResponse(datatextlog) {
+        const damageMap = parsePlayerDamage(datatextlog);
         const animQueue = [];
         for (const [id, dmgObj] of Object.entries(damageMap)) {
             const obj = prepareDamageElement(id, dmgObj.total, dmgObj.isCrit , dmgObj.onlyPassive,dmgObj.mainType);
@@ -607,6 +818,14 @@
             }
         };
     }
+    function parseBattleResult(paneCompletionHtml) {
+        const match = paneCompletionHtml.match(/You (?:have run away|have been defeated|are victorious)!/);
+        const imgMatch = paneCompletionHtml.match(/<img[^>]+\/y\/battle\/finishbattle\.png[^>]*>/i);
+        if (imgMatch){
+            const audioUrl = (match[0] === "You are victorious!") ? cfg.VictoryAudioUrl : cfg.FailedAudioUrl ;
+            WoWplayer.play(audioUrl,0.3);
+        }
+    }
     function makeDraggable(el) {
         el.onmousedown = e => {
             const pos = { left: el.offsetLeft, top: el.offsetTop, x: e.x, y: e.y };
@@ -622,9 +841,9 @@
         pane.id = "mlp_pane";
         pane.innerHTML = `
             <div id="mlp_box">
-                <div>*旋转*：<input id="rotate" type="range" min="-180" max="180" step="1" value="${editor.data.rotate}"></div>
-                <div>*对比度*：<input id="contrast" type="range" min="1" max="2" step="0.1" value="${editor.data.contrast}"></div>
-                <div>*锐化*：<input id="unsharp" type="range" min="0" max="50" step="0.1" value="${editor.data.unsharp}"></div>
+                <div>旋转 rotate：<input id="rotate" type="range" min="-180" max="180" step="1" value="${editor.data.rotate}"></div>
+                <div>对比度 contrast：<input id="contrast" type="range" min="1" max="2" step="0.1" value="${editor.data.contrast}"></div>
+                <div>锐化 unsharp：<input id="unsharp" type="range" min="0" max="50" step="0.1" value="${editor.data.unsharp}"></div>
                 <div style="margin-top: 10px">验证图按下可拖动 / 滚轮可缩放</div>
             </div>`;
         document.body.appendChild(pane);
