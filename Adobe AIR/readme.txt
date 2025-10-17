@@ -1,0 +1,1 @@
+flash building 的运行环境，SDK32
